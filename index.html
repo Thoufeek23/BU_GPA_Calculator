@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPA Calculator & Grade Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      color: #333;
+    }
+
+    header {
+      background-color: #4CAF50;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      font-size: 1.5em;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .section {
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      width: 100%;
+      background: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .results {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e8f5e9;
+      border: 1px solid #c8e6c9;
+      border-radius: 4px;
+    }
+
+    .add-button {
+      margin-top: 10px;
+      width: auto;
+    }
+
+    @media (min-width: 600px) {
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .section {
+        flex: 1 1 calc(50% - 20px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    GPA Calculator & Grade Predictor
+  </header>
+
+  <div class="container">
+    <!-- GPA Calculator -->
+    <div class="section">
+      <h2>GPA Calculator</h2>
+      <form id="gpaCalculator">
+        <div id="coursesContainer">
+          <div class="form-group">
+            <label for="Sub">Subject</label>
+            <input type="text" class="Sub" placeholder="Subject name (Optional)" min="1" style="width: 97%;">
+          </div>
+          <div class="form-group">
+            <label for="courseGrade">Course Grade:</label>
+            <select class="courseGrade">
+              <option value="A">A</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B">B</option>
+              <option value="B-">B-</option>
+              <option value="C+">C+</option>
+              <option value="C">C</option>
+              <option value="C-">C-</option>
+              <option value="D">D</option>
+              <option value="F">F</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="courseCredits">Course Credits:</label>
+            <input type="number" class="courseCredits" placeholder="Enter Credit Hours" min="1" style="width: 97%;">
+          </div>
+        </div>
+        <button type="button" class="add-button" onclick="addGpaCourse()">Add Another Course</button><br><br>
+        <button type="button" onclick="calculateGPA()">Calculate GPA</button>
+      </form>
+
+      <div class="results" id="gpaResults" style="display: none;">
+        <h3>Calculated GPA:</h3>
+        <p id="calculatedGPA"></p>
+      </div>
+    </div>
+
+    <!-- Grade Predictor -->
+    <div class="section">
+      <h2>Grade Predictor</h2>
+      <form id="gradePredictor">
+        <div id="categoriesContainer">
+          <div class="category">
+            <div class="form-group">
+              <label for="category">Category (e.g., Quiz):</label>
+              <input type="text" name="category" placeholder="Enter Category" style="width: 97%;">
+            </div>
+            <div class="form-group">
+              <label for="weightage">Weightage (%):</label>
+              <input type="number" name="weightage" placeholder="Enter Weightage" min="1" max="100" style="width: 97%;">
+            </div>
+            <div class="form-group">
+              <label for="score">Score Achieved (Out of 100):</label>
+              <input type="number" name="score" placeholder="Enter Score Achieved" min="0" style="width: 97%;">
+            </div>
+          </div>
+        </div>
+        <button type="button" class="add-button" onclick="addCategory()">Add Another Category</button><br><br>
+        <button type="button" onclick="calculatePrediction()">Calculate Grade</button>
+      </form>
+
+      <div class="results" id="predictionResults" style="display: none;">
+        <h3>Grade Prediction:</h3>
+        <p id="predictedGrade"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // GPA Calculator
+    let courses = [];
+
+    function gradeToGPA(grade) {
+      const scale = {
+        'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3,
+        'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0
+      };
+      return scale[grade.toUpperCase()] || 0;
+    }
+
+    function addGpaCourse() {
+      const coursesContainer = document.getElementById('coursesContainer');
+      const newCourse = document.createElement('div');
+      newCourse.classList.add('course');
+      newCourse.innerHTML = `
+        <div class="form-group">
+            <label for="Sub">Subject</label>
+            <input type="text" class="Sub" placeholder="Subject name (Optional)" min="1" style="width: 97%;">
+          </div>
+        <div class="form-group">
+          <label>Course Grade:</label>
+          <select class="courseGrade">
+            <option value="A">A</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B">B</option>
+            <option value="B-">B-</option>
+            <option value="C+">C+</option>
+            <option value="C">C</option>
+            <option value="C-">C-</option>
+            <option value="D">D</option>
+            <option value="F">F</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Course Credits:</label>
+          <input type="number" class="courseCredits" placeholder="Enter Credit Hours" min="1">
+        </div>
+      `;
+      coursesContainer.appendChild(newCourse);
+    }
+
+    function calculateGPA() {
+      courses = [];
+      const courseGrades = document.querySelectorAll('.courseGrade');
+      const courseCredits = document.querySelectorAll('.courseCredits');
+
+      for (let i = 0; i < courseGrades.length; i++) {
+        const grade = courseGrades[i].value;
+        const credits = parseFloat(courseCredits[i].value);
+        if (!grade || isNaN(credits) || credits <= 0) {
+          alert('Please enter valid grade and credit hours.');
+          return;
+        }
+
+        courses.push({ grade, credits });
+      }
+
+      let totalPoints = 0;
+      let totalCredits = 0;
+
+      courses.forEach(course => {
+        totalPoints += gradeToGPA(course.grade) * course.credits;
+        totalCredits += course.credits;
+      });
+
+      const gpa = (totalPoints / totalCredits).toFixed(2);
+      document.getElementById('calculatedGPA').innerText = `Your GPA is ${gpa}`;
+      document.getElementById('gpaResults').style.display = 'block';
+    }    
+
+    // Grade Predictor
+    function addCategory() {
+      const categoriesContainer = document.getElementById('categoriesContainer');
+      const newCategory = document.createElement('div');
+      newCategory.classList.add('category');
+      newCategory.innerHTML = `
+        <div class="form-group">
+          <label for="category">Category (e.g., Quiz):</label>
+          <input type="text" name="category" placeholder="Enter Category">
+        </div>
+        <div class="form-group">
+          <label for="weightage">Weightage (%):</label>
+          <input type="number" name="weightage" placeholder="Enter Weightage" min="1" max="100">
+        </div>
+        <div class="form-group">
+          <label for="score">Score Achieved:</label>
+          <input type="number" name="score" placeholder="Enter Score Achieved" min="0">
+        </div>
+      `;
+      categoriesContainer.appendChild(newCategory);
+    }
+
+    function calculatePrediction() {
+      const categories = document.querySelectorAll('#categoriesContainer .category');
+      let totalWeighted = 0;
+      let totalWeightage = 0;
+
+      categories.forEach(category => {
+        const weightage = parseFloat(category.querySelector('input[name="weightage"]').value);
+        const score = parseFloat(category.querySelector('input[name="score"]').value);
+
+        if (isNaN(weightage) || isNaN(score) || weightage <= 0 || score < 0) {
+          alert('Please enter valid weightage and score values.');
+          return;
+        }
+
+        totalWeighted += (score * weightage) / 100;
+        totalWeightage += weightage;
+      });
+
+      if (totalWeightage !== 100) {
+        alert('Total weightage must sum up to 100%.');
+        return;
+      }
+
+      document.getElementById('predictedGrade').innerText = `Your predicted grade is ${totalWeighted.toFixed(2)}%`;
+      document.getElementById('predictionResults').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
+
